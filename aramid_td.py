@@ -1,8 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+import math, operator
 import subprocess
 from vncdotool import api
+from PIL import Image, ImageChops
 import sys
 import time
 import linecache
@@ -66,7 +68,10 @@ def runTest():
  	add_client='::'.join((host_vm, port_vm))
 	print(add_client)
 	client=api.connect(add_client, password=None)
-        
+        if client == '':
+		print("ERROR! Client NOT DEFINED!  ")
+                sys.exit()
+
 	print("Ok!")
     else:
         print("Error! NameVM: and(or) PortVM: NOT DEFINED! If you want exit: Q. If you want continue: S.")
@@ -107,21 +112,22 @@ def runTest():
 		time.sleep(int(sec))
 	elif drive_in[0]== "ScreenSrc:":
                 src_way=drive_in[1]
-                src_way=src_way[0:-1]
+               # src_way=src_way[0:-1]
                 print(src_way)
+		#client.captureScreen(str(src_way))	
 		n += 1
-        elif drive_in[2]== "ScreenResult:":
-                  result_way=drive_in[3]
-                  result_way_way=result_way[0:-1]
-                  print(result_way)
-                  client.captureScreen(result_way)
-     	rms=int(diffImg(result_way, src_way))
-	
-	if rms != 0:
-		print("Step №%d! ERROR! " % n)
-		sys.exit()  
-	else:
-		print("Step №%d! OK! " % n)
+        	if drive_in[2]== "ScreenResult:":
+                	result_way=drive_in[3]
+                  	result_way=result_way[0:-1]
+                  	print(result_way)
+                  	client.captureScreen(result_way)
+     		rms=diffImg(result_way, src_way)
+		print(rms)
+		if int(rms) > 10:
+			print("Step №%d! ERROR! " % n)
+			sys.exit()  
+		else:
+			print("Step №%d! OK! " % n)
         
  		
 	#if drive_in[2]== "ScreenSrc:": 
@@ -139,11 +145,11 @@ def runTest():
         i+=1
 def diffImg(file1,file2):
     image1 = Image.open(file1)
-   # print image1
+    print image1
     image2 = Image.open(file2)
     h1 = image1.histogram()
     h2 = image2.histogram()
-    #h = ImageChops.difference(image1, image2).histogram()
+    h = ImageChops.difference(image1, image2).histogram()
     return math.sqrt(reduce(operator.add,map(lambda a,b: (a-b)**2, h1, h2))/len(h1))
 runTest()
 
